@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// এই Model-এর কাজ হলো ব্যবহারকারীর বিভিন্ন Social Login Account-এর তথ্য Database-এ সংরক্ষণ করা।
+// ধরো, তোমার Website-এ Google Login এবং GitHub Login System রয়েছে।
+// তাহলে একজন User Google অথবা GitHub দিয়ে Login করলে সেই Provider-এর Account Information এই Table-এ সংরক্ষিত হবে।
+
+model Account {
+  id                 String  @id @default(cuid()) //Account-এর Unique ID
+  userId             String //কোন User-এর Account
+  type               String //Account-এর Type (যেমন: OAuth, Email, Credentials ইত্যাদি)
+  provider           String //যে Provider-এর মাধ্যমে Login করা হয়েছে (যেমন: Google, GitHub ইত্যাদি)
+  providerAccountId  String //Provider-এর Account ID
+  refresh_token      String? @db.Text //Provider-এর Refresh Token
+  access_token       String? @db.Text //Provider-এর Access Token
+  expires_at         Int? //Access Token-এর Expiry Time
+  token_type         String? //Token-এর Type (যেমন: Bearer ইত্যাদি)
+  scope              String? //Token-এর Scope
+  id_token           String? @db.Text //Provider-এর ID Token
+  session_state      String? //Session State
+
+  @@unique([provider, providerAccountId]) //Unique constraint on provider and providerAccountId
+}
+
+
+// এই Model-এর কাজ হলো ব্যবহারকারীর বিভিন্ন Session-এর তথ্য Database-এ সংরক্ষণ করা।
+model Session {
+  id           String   @id @default(cuid()) //Session-এর Unique ID
+  sessionToken String   @unique //Session-এর Token
+  userId       String //কোন User-এর Session
+  expires      DateTime //Session-এর Expiry Time
+}
+
+// এই Model-এর কাজ হলো ব্যবহারকারীর তথ্য Database-এ সংরক্ষণ করা।
+model VerificationToken {
+  identifier String //যে User-এর জন্য Token তৈরি করা হয়েছে
+  token      String   @unique //Token-এর Unique Value
+  expires    DateTime //Token-এর Expiry Time
+
+  @@unique([identifier, token]) //Unique constraint on identifier and token
+}
+
+model User {
+  id            String    @id @default(cuid()) //User-এর Unique ID
+  name          String? //User-এর নাম
+  email         String? @unique //User-এর Email
+  emailVerified DateTime? //User-এর Email Verified Time
+  image         String? //User-এর Profile Image URL
+
+  accounts      Account[] //একজন User-এর একাধিক Account থাকতে পারে
+  sessions      Session[] //একজন User-এর একাধিক Session থাকতে পারে
+}

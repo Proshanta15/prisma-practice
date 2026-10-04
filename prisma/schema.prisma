@@ -31,6 +31,8 @@ model Account {
   id_token           String? @db.Text //Provider-এর ID Token
   session_state      String? //Session State
 
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade) //Relation to User Model
+
   @@unique([provider, providerAccountId]) //Unique constraint on provider and providerAccountId
 }
 
@@ -41,11 +43,12 @@ model Session {
   sessionToken String   @unique //Session-এর Token
   userId       String //কোন User-এর Session
   expires      DateTime //Session-এর Expiry Time
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade) //Relation to User Model
 }
 
 // এই Model-এর কাজ হলো ব্যবহারকারীর তথ্য Database-এ সংরক্ষণ করা।
 model VerificationToken {
-  identifier String //যে User-এর জন্য Token তৈরি করা হয়েছে
+  identifier String //যে User-এর জন্য Token তৈরি করা হয়েছে
   token      String   @unique //Token-এর Unique Value
   expires    DateTime //Token-এর Expiry Time
 

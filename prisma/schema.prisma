@@ -11,6 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // এই Model-এর কাজ হলো ব্যবহারকারীর বিভিন্ন Social Login Account-এর তথ্য Database-এ সংরক্ষণ করা।
@@ -64,4 +65,35 @@ model User {
 
   accounts      Account[] //একজন User-এর একাধিক Account থাকতে পারে
   sessions      Session[] //একজন User-এর একাধিক Session থাকতে পারে
+  jobs          Job[] @relation("PostedJobs") //একজন User-এর একাধিক Job Post থাকতে পারে
+
+  applications  Application[] //একজন User-এর একাধিক Job Application থাকতে পারে
+}
+
+model Job {
+  id          String   @id @default(cuid()) //Job-এর Unique ID
+  title       String //Job-এর Title
+  company     String //Job-এর Company Name
+  location    String //Job-এর Location
+  type        String //Job-এর Type (যেমন: Full-time, Part-time, Internship ইত্যাদি)
+  description String //Job-এর Description
+  salary      String //Job-এর Salary
+  postedAt   DateTime @default(now()) //Job-এর Creation Time
+  postedBy    User @relation("PostedJobs", fields: [postedById], references: [id]) //Job-এর Post করা User-এর ID
+  postedById  String //Job-এর Post করা User-এর ID
+
+  applications Application[] //একটি Job-এর একাধিক Application থাকতে পারে
+}
+
+model Application {
+  id        String   @id @default(cuid()) //Application-এর Unique ID
+  jobId     String //যে Job-এর জন্য Application করা হয়েছে
+  userId    String //যে User-এর জন্য Application করা হয়েছে
+  status    String @default("Pending") //Application-এর Status (যেমন: Pending, Accepted, Rejected ইত্যাদি)
+  appliedAt DateTime @default(now()) //Application-এর Creation Time
+
+  job       Job      @relation(fields: [jobId], references: [id]) //Relation to Job Model
+  user      User     @relation(fields: [userId], references: [id]) //Relation to User Model
+
+  @@unique([jobId, userId]) //Unique constraint on jobId and userId
 }
